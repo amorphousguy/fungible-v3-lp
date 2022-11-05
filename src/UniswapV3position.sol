@@ -26,7 +26,12 @@ contract UniswapV3position is IERC721Receiver {
         address token0;
         address token1;
     }
-    
+
+    struct AmountStruc {
+        uint256 amount0;
+        uint256 amount1;
+    }
+
     /// @dev deposits[tokenId] => Deposit
     mapping(uint256 => Deposit) public deposits;
 
@@ -78,57 +83,53 @@ contract UniswapV3position is IERC721Receiver {
     /// For this example we are providing 1000 DAI and 1000 USDC in liquidity
     /// @return tokenId The id of the newly minted ERC721
     /// @return liquidity The amount of liquidity for the position
-    /// @return amount0 The amount of token0
-    /// @return amount1 The amount of token1
+    /// @return amount The amount of token0, token1
     function mintNewPosition(
         address _token0,
         address _token1,
         uint24 _fee,
         int24 _tickLower,
         int24 _tickHigher,
-        uint256 _amount0ToMint,
-        uint256 _amount1ToMint,
-        uint256 _amount0Min,
-        uint256 _amount1Min
+        AmountStruc memory _amountToMint,
+        AmountStruc memory _amountMin
     )
         internal
         returns (
             uint256 tokenId,
             uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
+            AmountStruc memory amount
         )
     {
         console.log("Transfering assets");
         // transfer tokens to contract
-        if (_amount0ToMint > 0)
+        if (_amountToMint.amount0 > 0)
             TransferHelper.safeTransferFrom(
                 _token0,
                 msg.sender,
                 address(this),
-                _amount0ToMint
+                _amountToMint.amount0
             );
-        if (_amount1ToMint > 0)
+        if (_amountToMint.amount1 > 0)
             TransferHelper.safeTransferFrom(
                 _token1,
                 msg.sender,
                 address(this),
-                _amount1ToMint
+                _amountToMint.amount1
             );
 
         console.log("approving assets");
         // Approve the position manager
-        if (_amount0ToMint > 0)
+        if (_amountToMint.amount0 > 0)
             TransferHelper.safeApprove(
                 _token0,
                 address(nonfungiblePositionManager),
-                _amount0ToMint
+                _amountToMint.amount0
             );
-        if (_amount1ToMint > 0)
+        if (_amountToMint.amount1 > 0)
             TransferHelper.safeApprove(
                 _token1,
                 address(nonfungiblePositionManager),
-                _amount1ToMint
+                _amountToMint.amount1
             );
 
         INonfungiblePositionManager.MintParams
@@ -138,17 +139,17 @@ contract UniswapV3position is IERC721Receiver {
                 fee: _fee,
                 tickLower: _tickLower,
                 tickUpper: _tickHigher,
-                amount0Desired: _amount0ToMint,
-                amount1Desired: _amount1ToMint,
-                amount0Min: _amount0Min,
-                amount1Min: _amount1Min,
+                amount0Desired: _amountToMint.amount0,
+                amount1Desired: _amountToMint.amount1,
+                amount0Min: _amountMin.amount0,
+                amount1Min: _amountMin.amount1,
                 recipient: address(this),
                 deadline: block.timestamp
             });
 
         console.log("Mint uniswap liquidity position");
         // Note that the pool must already exist.  Call createPool beforehand just in case
-        (tokenId, liquidity, amount0, amount1) = nonfungiblePositionManager
+        (tokenId, liquidity, amount.amount0, amount.amount1) = nonfungiblePositionManager
             .mint(params);
 
         console.log("Minted uniswap liquidity position");
@@ -157,35 +158,34 @@ contract UniswapV3position is IERC721Receiver {
         _createDeposit(msg.sender, tokenId);
 
         // Remove allowance and refund in both assets.
-        if (amount0 < _amount0ToMint) {
+        if (amount.amount0 < _amountToMint.amount0) {
             TransferHelper.safeApprove(
                 _token0,
                 address(nonfungiblePositionManager),
                 0
             );
-            uint256 refund0 = _amount0ToMint - amount0;
+            uint256 refund0 = _amountToMint.amount0 - amount.amount0;
             TransferHelper.safeTransfer(_token0, msg.sender, refund0);
         }
 
-        if (amount1 < _amount1ToMint) {
+        if (amount.amount1 < _amountToMint.amount1) {
             TransferHelper.safeApprove(
                 _token1,
                 address(nonfungiblePositionManager),
                 0
             );
-            uint256 refund1 = _amount1ToMint - amount1;
-            TransferHelper.safeTransfer(_token1, msg.sender, refund1);
+            uint256 refund1 = _amountToMint.amount1 - amount.amount1;
+            TransferHelper.safeTransfer(_token0, msg.sender, refund1);
         }
     }
 
     /// @notice Collects the fees associated with provided liquidity
     /// @dev The contract must hold the erc721 token before it can collect fees
     /// @param tokenId The id of the erc721 token
-    /// @return amount0 The amount of fees collected in token0
-    /// @return amount1 The amount of fees collected in token1
+    /// @return amount The amount of fees collected in token0, token1
     function collectAllFees(uint256 tokenId)
         internal
-        returns (uint256 amount0, uint256 amount1)
+        returns (AmountStruc memory amount)
     {
         // Caller must own the ERC721 position, meaning it must be a deposit
 
@@ -199,7 +199,7 @@ contract UniswapV3position is IERC721Receiver {
                 amount1Max: type(uint128).max
             });
 
-        (amount0, amount1) = nonfungiblePositionManager.collect(params);
+        (amount.amount0, amount.amount1) = nonfungiblePositionManager.collect(params);
 
         // send collected fee back to owner
         //_sendToOwner(tokenId, amount0, amount1);

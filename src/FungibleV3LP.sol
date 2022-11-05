@@ -84,29 +84,47 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             uint liquidity
         )
     {
+        //consolidate to avoid stack problems
+        AmountStruc memory amountDesired;
+        AmountStruc memory amountMin;
+        amountDesired.amount0 = amountADesired;
+        amountDesired.amount1 = amountBDesired;
+        amountMin.amount0 = amountAMin;
+        amountMin.amount1 = amountBMin;
+        delete amountADesired;
+        delete amountBDesired;
+        delete amountAMin;
+        delete amountBMin;
+
         //calculate using oracles right tickLower + tickHigher to use
         int24 tickLower = TickMath.MIN_TICK;
         int24 tickHigher = TickMath.MAX_TICK;
 
         //burn current NFT fully
-        //check if there is a current 
-        //update liquidity amount to be minted
+        //check if there is a current
+        if (activeTokenId>0) {
+            (AmountStruc memory amount) = collectAllFees(activeTokenId);  //brings all collected fees to this contract
 
+            //withdraw liquidity from current collateral
+
+        } 
+        
         //mint new position
-        (activeTokenId, liquidity, amountA, amountB) = mintNewPosition(
+         AmountStruc memory returnAmount;
+        (activeTokenId, liquidity, returnAmount) = mintNewPosition(
             tokenA,
             tokenB,
             fee,
             tickLower,
             tickHigher,
-            amountADesired,
-            amountBDesired,
-            amountAMin,
-            amountBMin
+            amountDesired,
+            amountMin
         );
 
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
         _mint(to, liquidity); 
+
+        return (returnAmount.amount0, returnAmount.amount1, liquidity);
     }
 
     function removeLiquidity(
