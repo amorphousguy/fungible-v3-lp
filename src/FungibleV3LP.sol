@@ -22,6 +22,9 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
     address tokenB;
     uint24 fee;
 
+    //current active NFT
+    uint256 activeTokenId;
+
     constructor(
         INonfungiblePositionManager _nonfungiblePositionManager,
         address _tokenA,
@@ -84,8 +87,8 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         //burn current NFT fully
         //update liquidity amount to be minted
 
-        uint256 tokenId;
-        (tokenId, liquidity, amountA, amountB) = mintNewPosition(
+        //mint new position
+        (activeTokenId, liquidity, amountA, amountB) = mintNewPosition(
             tokenA,
             tokenB,
             fee,
@@ -97,9 +100,8 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             amountBMin
         );
 
-        //update tokenID of current active v3 position
-
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
+        function _mint(to, liquidity); 
     }
 
     function removeLiquidity(
@@ -109,8 +111,12 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         address to,
         uint deadline
     ) public returns (uint amountA, uint amountB) {
+        //burn liquidity from msg.sender
+        _burn(msg.sender,liquidity);
+
         //collect fees
         //decrease liquidity by 'liquidity' amount - but keep NFT 'alive'
         //send tokens + fees to holder
+
     }
 }
