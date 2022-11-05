@@ -26,7 +26,7 @@ contract UniswapV3position is IERC721Receiver {
         address token0;
         address token1;
     }
-
+git 
     /// @dev deposits[tokenId] => Deposit
     mapping(uint256 => Deposit) public deposits;
 
@@ -202,7 +202,7 @@ contract UniswapV3position is IERC721Receiver {
         (amount0, amount1) = nonfungiblePositionManager.collect(params);
 
         // send collected fee back to owner
-        _sendToOwner(tokenId, amount0, amount1);
+        //_sendToOwner(tokenId, amount0, amount1);
     }
 
     /// @notice A function that decreases the current liquidity by half. An example to show how to call the `decreaseLiquidity` function defined in periphery.
