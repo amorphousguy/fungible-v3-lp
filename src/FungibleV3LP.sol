@@ -5,6 +5,16 @@ pragma abicoder v2;
 import "./UniswapV3position.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+//Note: could not import from original location, so declaring here for now.
+//import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";a
+interface IERC20Metadata is IERC20 {
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function decimals() external view returns (uint8);
+}
+
 
 //debugging
 import "hardhat/console.sol";
@@ -23,11 +33,19 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         address _tokenB,
         uint24 _fee) 
         UniswapV3position(_nonfungiblePositionManager)
-        ERC20('','') 
+        ERC20(tName(_tokenA,_tokenB),tSymbol(_tokenA,_tokenB)) 
         {
         tokenA = _tokenA;
         tokenB = _tokenB;
         fee = _fee;
+    }
+
+    function tName(address a, address b) private view returns (string memory) {
+        return string(abi.encodePacked(IERC20Metadata(a).name(),IERC20Metadata(b).name(),string('v3LP')));
+    }
+    
+    function tSymbol(address a, address b) private view returns (string memory) {
+        return string(abi.encodePacked(IERC20Metadata(a).symbol(),IERC20Metadata(b).symbol(),string('v3LP')));
     }
 
     function addLiquidity(
