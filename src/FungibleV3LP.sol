@@ -96,8 +96,8 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         if (activeTokenId>0) {
             (AmountStruc memory amount) = collectAllFees(activeTokenId);  //brings all collected fees to this contract
 
-            //withdraw liquidity from current collateral
-
+            //withdraw liquidity from current collateral    
+            (AmountStruc memory amount2) = burnPosition(activeTokenId);  //brings all liquidity from position
         } 
         
         //mint new position
