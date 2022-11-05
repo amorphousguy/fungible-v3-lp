@@ -9,3 +9,6 @@
 	url = https://github.com/uniswap/v3-core
 [submodule "/home/scorpion9979/git/fungible-v3-lp/lib/v3-core"]
 	branch = 0.8
+[submodule "lib/v3-periphery"]
+	path = lib/v3-periphery
+	url = https://github.com/uniswap/v3-periphery
