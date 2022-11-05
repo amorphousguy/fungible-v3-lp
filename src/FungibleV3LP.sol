@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "./UniswapV3position.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
@@ -81,10 +82,11 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         )
     {
         //calculate using oracles right tickLower + tickHigher to use
-        int24 tickLower = 0;
-        int24 tickHigher = 0;
+        int24 tickLower = TickMath.MIN_TICK;
+        int24 tickHigher = TickMath.MAX_TICK;
 
         //burn current NFT fully
+        //check if there is a current 
         //update liquidity amount to be minted
 
         //mint new position
@@ -101,7 +103,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         );
 
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
-        function _mint(to, liquidity); 
+        _mint(to, liquidity); 
     }
 
     function removeLiquidity(
