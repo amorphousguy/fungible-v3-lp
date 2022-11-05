@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.7.5;
 pragma abicoder v2;
 
@@ -91,7 +91,7 @@ contract UniswapV3position is IERC721Receiver {
         uint256 _amount0Min,
         uint256 _amount1Min
     )
-        external
+        private
         returns (
             uint256 tokenId,
             uint128 liquidity,
@@ -184,7 +184,7 @@ contract UniswapV3position is IERC721Receiver {
     /// @return amount0 The amount of fees collected in token0
     /// @return amount1 The amount of fees collected in token1
     function collectAllFees(uint256 tokenId)
-        external
+        private
         returns (uint256 amount0, uint256 amount1)
     {
         // Caller must own the ERC721 position, meaning it must be a deposit
@@ -210,7 +210,7 @@ contract UniswapV3position is IERC721Receiver {
     /// @return amount0 The amount received back in token0
     /// @return amount1 The amount returned back in token1
     function decreaseLiquidityByFactor(uint256 tokenId, uint24 _decreaseFactor)
-        external
+        private
         returns (uint256 amount0, uint256 amount1)
     {
         // caller must be the owner of the NFT
@@ -256,7 +256,7 @@ contract UniswapV3position is IERC721Receiver {
         uint256 amountAdd0,
         uint256 amountAdd1
     )
-        external
+        private
         returns (
             uint128 liquidity,
             uint256 amount0,
@@ -323,7 +323,7 @@ contract UniswapV3position is IERC721Receiver {
 
     /// @notice Transfers the NFT to the owner
     /// @param tokenId The id of the erc721
-    function retrieveNFT(uint256 tokenId) external {
+    function retrieveNFT(uint256 tokenId) private {
         // must be the owner of the NFT
         require(msg.sender == deposits[tokenId].owner, "Not the owner");
         // transfer ownership to original owner
