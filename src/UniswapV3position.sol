@@ -204,134 +204,28 @@ contract UniswapV3position is IERC721Receiver {
         //_sendToOwner(tokenId, amount0, amount1);
     }
 
+
     /// @notice A function that decreases the current liquidity by half. An example to show how to call the `decreaseLiquidity` function defined in periphery.
     /// @param tokenId The id of the erc721 token
-    /// @return amount0 The amount received back in token0
-    /// @return amount1 The amount returned back in token1
-    function decreaseLiquidityByFactor(uint256 tokenId, uint24 _decreaseFactor)
+    /// @return amount The amount received back in token0, token1
+    function burnPosition(uint256 tokenId)
         internal
-        returns (uint256 amount0, uint256 amount1)
+        returns (AmountStruc memory amount)
     {
-        // caller must be the owner of the NFT
-        require(
-            msg.sender == deposits[tokenId].owner,
-            "UniswapV3Utils: Not the position owner"
-        );
-        require(
-            _decreaseFactor < 1000000,
-            "UniswapV3Utils: Decrease factor should be lower than 100%"
-        );
-        // get liquidity data for tokenId
-        uint128 liquidity = deposits[tokenId].liquidity;
-        uint128 NewLiquidity = (liquidity * _decreaseFactor) / 1000000;
-
         // amount0Min and amount1Min are price slippage checks
         // if the amount received after burning is not greater than these minimums, transaction will fail
         INonfungiblePositionManager.DecreaseLiquidityParams
             memory params = INonfungiblePositionManager
                 .DecreaseLiquidityParams({
                     tokenId: tokenId,
-                    liquidity: NewLiquidity,
+                    liquidity: 0,
                     amount0Min: 0,
                     amount1Min: 0,
                     deadline: block.timestamp
                 });
 
-        (amount0, amount1) = nonfungiblePositionManager.decreaseLiquidity(
+        (amount.amount0, amount.amount1) = nonfungiblePositionManager.decreaseLiquidity(
             params
         );
-
-        //send liquidity back to owner
-        _sendToOwner(tokenId, amount0, amount1);
-    }
-
-    /// @notice Increases liquidity in the current range
-    /// @dev Pool must be initialized already to add liquidity
-    /// @param tokenId The id of the erc721 token
-    /// @param amount0 The amount to add of token0
-    /// @param amount1 The amount to add of token1
-    function increaseLiquidityCurrentRange(
-        uint256 tokenId,
-        uint256 amountAdd0,
-        uint256 amountAdd1
-    )
-        internal
-        returns (
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        )
-    {
-        TransferHelper.safeTransferFrom(
-            deposits[tokenId].token0,
-            msg.sender,
-            address(this),
-            amountAdd0
-        );
-        TransferHelper.safeTransferFrom(
-            deposits[tokenId].token1,
-            msg.sender,
-            address(this),
-            amountAdd1
-        );
-
-        TransferHelper.safeApprove(
-            deposits[tokenId].token0,
-            address(nonfungiblePositionManager),
-            amountAdd0
-        );
-        TransferHelper.safeApprove(
-            deposits[tokenId].token1,
-            address(nonfungiblePositionManager),
-            amountAdd1
-        );
-
-        INonfungiblePositionManager.IncreaseLiquidityParams
-            memory params = INonfungiblePositionManager
-                .IncreaseLiquidityParams({
-                    tokenId: tokenId,
-                    amount0Desired: amountAdd0,
-                    amount1Desired: amountAdd1,
-                    amount0Min: 0,
-                    amount1Min: 0,
-                    deadline: block.timestamp
-                });
-
-        (liquidity, amount0, amount1) = nonfungiblePositionManager
-            .increaseLiquidity(params);
-    }
-
-    /// @notice Transfers funds to owner of NFT
-    /// @param tokenId The id of the erc721
-    /// @param amount0 The amount of token0
-    /// @param amount1 The amount of token1
-    function _sendToOwner(
-        uint256 tokenId,
-        uint256 amount0,
-        uint256 amount1
-    ) internal {
-        // get owner of contract
-        address owner = deposits[tokenId].owner;
-
-        address token0 = deposits[tokenId].token0;
-        address token1 = deposits[tokenId].token1;
-        // send collected fees to owner
-        TransferHelper.safeTransfer(token0, owner, amount0);
-        TransferHelper.safeTransfer(token1, owner, amount1);
-    }
-
-    /// @notice Transfers the NFT to the owner
-    /// @param tokenId The id of the erc721
-    function retrieveNFT(uint256 tokenId) private {
-        // must be the owner of the NFT
-        require(msg.sender == deposits[tokenId].owner, "Not the owner");
-        // transfer ownership to original owner
-        nonfungiblePositionManager.safeTransferFrom(
-            address(this),
-            msg.sender,
-            tokenId
-        );
-        //remove information related to tokenId
-        delete deposits[tokenId];
     }
 }
