@@ -37,10 +37,12 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
     {
         tokenA = _tokenA;
         tokenB = _tokenB;
+        if (tokenA>tokenB) (tokenA,tokenB) = (tokenB,tokenA); //swap order so tokenA is smallest (token0)
         fee = _fee;
     }
 
     function tName(address a, address b) private view returns (string memory) {
+        if (a>b) (a,b) = (b,a);  //make lowest address first (token0)
         return
             string(
                 abi.encodePacked(
@@ -56,6 +58,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         view
         returns (string memory)
     {
+        if (a>b) (a,b) = (b,a);  //make lowest address first (token0)
         return
             string(
                 abi.encodePacked(
