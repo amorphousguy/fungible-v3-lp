@@ -1,0 +1,5 @@
+@uniswap/v3-core/=lib/v3-core/
+@uniswap/v3-periphery/=lib/v3-periphery/
+dependencies/v3-periphery/=lib/v3-periphery/
+@openzeppelin/contracts=lib/openzeppelin-contracts/contracts/
+hardhat=lib/forge-std/src/
