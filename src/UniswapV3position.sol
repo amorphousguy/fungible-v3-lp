@@ -91,7 +91,7 @@ contract UniswapV3position is IERC721Receiver {
         uint256 _amount0Min,
         uint256 _amount1Min
     )
-        private
+        internal
         returns (
             uint256 tokenId,
             uint128 liquidity,
@@ -184,7 +184,7 @@ contract UniswapV3position is IERC721Receiver {
     /// @return amount0 The amount of fees collected in token0
     /// @return amount1 The amount of fees collected in token1
     function collectAllFees(uint256 tokenId)
-        private
+        internal
         returns (uint256 amount0, uint256 amount1)
     {
         // Caller must own the ERC721 position, meaning it must be a deposit
@@ -210,7 +210,7 @@ contract UniswapV3position is IERC721Receiver {
     /// @return amount0 The amount received back in token0
     /// @return amount1 The amount returned back in token1
     function decreaseLiquidityByFactor(uint256 tokenId, uint24 _decreaseFactor)
-        private
+        internal
         returns (uint256 amount0, uint256 amount1)
     {
         // caller must be the owner of the NFT
@@ -256,7 +256,7 @@ contract UniswapV3position is IERC721Receiver {
         uint256 amountAdd0,
         uint256 amountAdd1
     )
-        private
+        internal
         returns (
             uint128 liquidity,
             uint256 amount0,
