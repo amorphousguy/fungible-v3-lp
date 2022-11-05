@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.5;
-pragma abicoder v2;
+pragma solidity ^0.8.17;
 
 import "./UniswapV3position.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
@@ -8,14 +7,6 @@ import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
-
-interface IERC20Metadata is IERC20 {
-    function name() external view returns (string memory);
-
-    function symbol() external view returns (string memory);
-
-    function decimals() external view returns (uint8);
-}
 
 contract FungibleV3LP is UniswapV3position, ERC20 {
     //pool variables
