@@ -217,17 +217,14 @@ contract FungibleV3LPSwapsTest is Test {
         assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
     }
 
-    function testSwaps(uint256 amountIn, uint24 d) public {
-        vm.assume(amountIn > 0 && amountIn <= 100e18);
-        bool forward = d % 2 == 0;
-
-        uint256 amountIn = IERC20(usdc).balanceOf(address(this));
+    function testSwaps(uint256 amountIn) public {
+        vm.assume(amountIn > 1e3 && amountIn <= 100e8);
 
         // do some swaps
         IERC20(weth).approve(address(swapRouter), type(uint256).max);
         IERC20(usdc).approve(address(swapRouter), type(uint256).max);        
 
-        ISwapRouter.ExactInputSingleParams memory params =
+        ISwapRouter.ExactInputSingleParams memory params1 =
             ISwapRouter.ExactInputSingleParams({
                 tokenIn: usdc,
                 tokenOut: weth,
@@ -238,8 +235,9 @@ contract FungibleV3LPSwapsTest is Test {
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
-        if (!forward) {
-            params = ISwapRouter.ExactInputSingleParams({
+        
+        ISwapRouter.ExactInputSingleParams memory params2 =
+            ISwapRouter.ExactInputSingleParams({
                 tokenIn: weth,
                 tokenOut: usdc,
                 fee: 3000,
@@ -249,10 +247,21 @@ contract FungibleV3LPSwapsTest is Test {
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
-        }
-
+        
+        ISwapRouter.ExactInputSingleParams memory params3 =
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: usdc,
+                tokenOut: weth,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
         // The call to `exactInputSingle` executes the swap.
-        swapRouter.exactInputSingle(params);
+        swapRouter.exactInputSingle(params1);
+        swapRouter.exactInputSingle(params2);
 
         // remove liquidity
         uint amountAMin=0;
