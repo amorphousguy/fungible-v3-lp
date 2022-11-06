@@ -278,7 +278,5 @@ contract FungibleV3LPSwapsTest is Test {
             to,
             deadline
         );
-        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
-        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
     }
 }
