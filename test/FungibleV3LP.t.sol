@@ -43,8 +43,44 @@ contract FungibleV3LPTest is Test {
         assertEq(fungibleV3LP.symbol(), "USDC-WETH-3000-v3LP");
     }
 
-    // function testSetNumber(uint256 x) public {
-    //     counter.setNumber(x);
-    //     assertEq(counter.number(), x);
+    // function testAddLiquidity() public {
+    //     // approve fungibleV3LP to spend test contract's tokens
+    //     IERC20(weth).approve(address(fungibleV3LP), -1);
+    //     IERC20(usdc).approve(address(fungibleV3LP), -1);
+
+    //     uint amountADesired;
+    //     uint amountBDesired;
+    //     uint amountAMin;
+    //     uint amountBMin;
+    //     address to;
+    //     uint deadline;
+
+    //     fungibleV3LP.addLiquidity(
+    //         amountADesired,
+    //         amountBDesired,
+    //         amountAMin,
+    //         amountBMin,
+    //         to,
+    //         deadline
+    //     );
+    // }
+
+    // function testRemoveLiquidity() public {
+    //     // approve fungibleV3LP to spend test contract's LP tokens
+    //     fungibleV3LP.approve(address(fungibleV3LP), -1);
+
+    //     uint liquidity;
+    //     uint amountAMin;
+    //     uint amountBMin;
+    //     address to;
+    //     uint deadline;
+
+    //     fungibleV3LP.removeLiquidity(
+    //         liquidity,
+    //         amountAMin,
+    //         amountBMin,
+    //         to,
+    //         deadline
+    //     );
     // }
 }
