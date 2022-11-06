@@ -138,7 +138,11 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             _liqFactor = _liqFactor * liquidity / oldLiquidity;
 
             //Add liquidity of new depositor
-
+            (liquidity, returnAmount) = increaseLiquidityCurrentRange(
+                activeTokenId,
+                amountDesired,
+                amountMin
+            );
 
             //update amounts to be minted in new position
             //amountDesired.amount0 = 

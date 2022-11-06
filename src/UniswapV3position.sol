@@ -270,6 +270,82 @@ contract UniswapV3position is IERC721Receiver {
     }
 
 
+    /// @notice Increases liquidity in the current range
+    /// @dev Pool must be initialized already to add liquidity
+    /// @param tokenId The id of the erc721 token
+    /// @param amount The amount to add of token0, token1
+    function increaseLiquidityCurrentRange(
+        uint256 tokenId,
+        AmountStruc memory amountAdd,
+        AmountStruc memory amountMin
+    )
+        internal
+        returns (
+            uint128 liquidity,
+            AmountStruc memory amount
+        )
+    {
+        TransferHelper.safeTransferFrom(
+            deposits[tokenId].token0,
+            msg.sender,
+            address(this),
+            amountAdd.amount0
+        );
+        TransferHelper.safeTransferFrom(
+            deposits[tokenId].token1,
+            msg.sender,
+            address(this),
+            amountAdd.amount1
+        );
+
+        TransferHelper.safeApprove(
+            deposits[tokenId].token0,
+            address(nonfungiblePositionManager),
+            amountAdd.amount0
+        );
+        TransferHelper.safeApprove(
+            deposits[tokenId].token1,
+            address(nonfungiblePositionManager),
+            amountAdd.amount1
+        );
+
+        INonfungiblePositionManager.IncreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .IncreaseLiquidityParams({
+                    tokenId: tokenId,
+                    amount0Desired: amountAdd.amount0,
+                    amount1Desired: amountAdd.amount1,
+                    amount0Min: amountMin.amount0,
+                    amount1Min: amountMin.amount1,
+                    deadline: block.timestamp
+                });
+
+        (liquidity, amount.amount0, amount.amount1) = nonfungiblePositionManager
+            .increaseLiquidity(params);
+
+              // Remove allowance and refund in both assets.
+        if (amount.amount0 < amountAdd.amount0) {
+            TransferHelper.safeApprove(
+                deposits[tokenId].token0,
+                address(nonfungiblePositionManager),
+                0
+            );
+            uint256 refund0 = amountAdd.amount0 - amount.amount0;
+            TransferHelper.safeTransfer(deposits[tokenId].token0, msg.sender, refund0);
+        }
+
+        if (amount.amount1 < amountAdd.amount1) {
+            TransferHelper.safeApprove(
+                deposits[tokenId].token1,
+                address(nonfungiblePositionManager),
+                0
+            );
+            uint256 refund1 = amountAdd.amount1 - amount.amount1;
+            TransferHelper.safeTransfer(deposits[tokenId].token0, msg.sender, refund1);
+        }
+    }
+
+
     /// @notice A function that decreases the current liquidity by half. An example to show how to call the `decreaseLiquidity` function defined in periphery.
     /// @param tokenId The id of the erc721 token
     /// @return amount The amount received back in token0, token1
