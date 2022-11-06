@@ -15,13 +15,14 @@ contract FungibleV3LPTest is Test {
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
 
     function setUp() public {
-        // string[] memory cmds = new string[](2);
-        // cmds[0] = "cat";
-        // cmds[1] = ".api";
-        // bytes memory rpcURL = vm.ffi(cmds);
-        // uint256 forkId = vm.createFork(rpcURL);
-        // vm.selectFork(forkId);
-        // vm.rollFork(forkId, 15907000);
+        string[] memory cmds = new string[](2);
+        cmds[0] = "cat";
+        cmds[1] = ".api";
+        bytes memory result = vm.ffi(cmds);
+        string memory rpcURL = string(result);
+        uint256 forkId = vm.createFork(rpcURL);
+        vm.selectFork(forkId);
+        vm.rollFork(forkId, 15907000);
         fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
     }
 
