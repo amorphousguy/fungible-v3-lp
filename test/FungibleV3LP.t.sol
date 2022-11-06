@@ -162,6 +162,8 @@ contract FungibleV3LPSwapsTest is Test {
     address private constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     INonfungiblePositionManager positionManager =
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
+    IUniswapV3Factory uniswapFactory = 
+        IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
 
     function setUp() public {
         // fork ETH mainnet locally
@@ -173,7 +175,7 @@ contract FungibleV3LPSwapsTest is Test {
         uint256 forkId = vm.createFork(rpcURL);
         vm.selectFork(forkId);
         vm.rollFork(forkId, 15907000);
-        fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
+        fungibleV3LP = new FungibleV3LP(positionManager, uniswapFactory, weth, usdc, 3000);
 
         swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
