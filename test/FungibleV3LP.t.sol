@@ -5,6 +5,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import "../src/FungibleV3LP.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+import "hardhat/console.sol";
 
 contract FungibleV3LPTest is Test {
     FungibleV3LP public fungibleV3LP;
@@ -14,13 +15,13 @@ contract FungibleV3LPTest is Test {
     INonfungiblePositionManager positionManager = INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
 
     function setUp() public {
-        fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 10000);
+        fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
     }
 
-    // function testIncrement() public {
-    //     counter.increment();
-    //     assertEq(counter.number(), 1);
-    // }
+    function testName() public {
+        console.log(fungibleV3LP.name());
+        assertEq(fungibleV3LP.name(), "USD Coin-Wrapped Ether-0-v3LP");
+    }
 
     // function testSetNumber(uint256 x) public {
     //     counter.setNumber(x);
