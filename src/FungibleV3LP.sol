@@ -98,12 +98,15 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         if (activeTokenId>0) {
             uint256 oldLiquidity = deposits[activeTokenId].liquidity;
             console.log("step1");
-            //collect all fees.  Accrue to token holders so far....
-            AmountStruc memory amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
-            console.log("step2");
 
             //withdraw liquidity from current collateral
             AmountStruc memory amount2 = burnPosition(activeTokenId); //brings all liquidity from position
+                        
+            console.log("step2");
+
+            //collect all fees.  Accrue to token holders so far....
+            AmountStruc memory amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
+            
             console.log("step3");
 
             //TODO calculate how liquidity how liquidity factor has changed given fees collected. for now hack this..
@@ -114,9 +117,10 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             AmountStruc memory amountMinExisting;
             
             amountDesiredExisting.amount0 = ERC20(tokenA).balanceOf(address(this));
-            amountDesiredExisting.amount0 = ERC20(tokenA).balanceOf(address(this));
+            amountDesiredExisting.amount1 = ERC20(tokenB).balanceOf(address(this));
+            console.log(amountDesiredExisting.amount0);
             amountMinExisting.amount0 = 0;
-            amountMinExisting.amount0 = 0;
+            amountMinExisting.amount1 = 0;
             console.log("step4");
 
             //mint new position for EXISTING tokens (ie, reposition liquidity)
@@ -131,9 +135,11 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
                 amountMinExisting
             );
 
+            console.log("step5");
             //update liquidity factor
             _liqFactor = _liqFactor * liquidity / oldLiquidity;
 
+            console.log("step6");
             //Add liquidity of new depositor
             (liquidity, returnAmount) = increaseLiquidityCurrentRange(
                 activeTokenId,
@@ -155,7 +161,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
                 amountMin
             );
         } 
-        
+        console.log("step7");
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
         _mint(to, liquidity.rayDivFloor(_liqFactor));
 
