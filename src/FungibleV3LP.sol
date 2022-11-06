@@ -157,8 +157,6 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
                 amountDesired,
                 amountMin
             );
-
-
         } 
         
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
