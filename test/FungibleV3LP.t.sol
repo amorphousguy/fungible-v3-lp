@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import "../src/FungibleV3LP.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -14,6 +15,8 @@ contract FungibleV3LPTest is Test {
     address private constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     INonfungiblePositionManager positionManager =
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
+    IUniswapV3Factory uniswapFactory = 
+        IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
 
     function setUp() public {
         // fork ETH mainnet locally
@@ -25,7 +28,7 @@ contract FungibleV3LPTest is Test {
         uint256 forkId = vm.createFork(rpcURL);
         vm.selectFork(forkId);
         vm.rollFork(forkId, 15907000);
-        fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
+        fungibleV3LP = new FungibleV3LP(positionManager, uniswapFactory, weth, usdc, 3000);
 
         // make test contract a whale
         address testContract = address(this);

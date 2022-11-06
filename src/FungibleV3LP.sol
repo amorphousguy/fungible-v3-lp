@@ -4,10 +4,12 @@ pragma solidity ^0.8.17;
 import "./UniswapV3position.sol";
 import "./WadRayMath.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import "hardhat/console.sol";
 
 contract FungibleV3LP is UniswapV3position, ERC20 {
@@ -25,8 +27,13 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
     //fee factor
     uint256 private _liqFactor; //implements rebase token functionality [RaY]
 
+    //factory
+    IUniswapV3Factory uniswapFactory;
+
+
     constructor(
         INonfungiblePositionManager _nonfungiblePositionManager,
+        IUniswapV3Factory _uniFactory,
         address _tokenA,
         address _tokenB,
         uint24 _fee
@@ -34,6 +41,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         UniswapV3position(_nonfungiblePositionManager)
         ERC20(tSymbol(_tokenA, _tokenB, _fee), tSymbol(_tokenA, _tokenB, _fee))
     {
+        uniswapFactory = _uniFactory;
         tokenA = _tokenA;
         tokenB = _tokenB;
         if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA); //swap order so tokenA is smallest (token0)
@@ -90,8 +98,10 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         delete amountBMin;
 
         //calculate using oracles right tickLower + tickHigher to use
-        int24 tickLower = -60*1000; //TickMath.MIN_TICK;
-        int24 tickHigher = 60*1000; //TickMath.MAX_TICK;
+        (int24 tickLower, int24 tickHigher)=getNewInterval();
+        console.log('ticklower: %s',absValue(int256(tickLower)));
+        console.log('tickhigher: %s',absValue(int256(tickHigher)));
+
 
         //burn current NFT fully
         //check if there is a current NFT position
@@ -168,6 +178,48 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         _mint(to, liquidity.rayDivFloor(_liqFactor));
 
         return (returnAmount.amount0, returnAmount.amount1, liquidity);
+    }
+
+    function absValue(int num) internal pure returns (uint) {
+        return (num>0) ? uint(num):uint(-num);
+    }
+
+    function getNewInterval() internal view returns (int24 tickLower, int24 tickHigher) {
+
+         //get pool address
+        address poolAddress = uniswapFactory.getPool(
+            tokenA,
+            tokenB,
+            fee
+        );
+
+        console.log("in oracle");
+        //get 10 datasamples of mean historical values
+        int24[] memory historicMeanTick = new int24[](10);
+        uint32 i;
+        for (i = 0; i < 10; i++) {  //for loop example
+            (historicMeanTick[i],)=OracleLibrary.consult(poolAddress,1+i*60*60);
+        }
+        console.log("read prices");
+    
+        //calculate L1 norm 
+        uint L1TickNorm = 0;
+        int24 j;
+        for (j = 1; j < 9; j++) {  //for loop example
+            L1TickNorm += absValue(int(historicMeanTick[9]) - 60*60*(j+1)*int(historicMeanTick[uint24(j)]) + 60*60*j*int(historicMeanTick[uint24(j-1)]))/(60*60);
+        }
+        L1TickNorm /=8;
+        console.log("calculated norm");
+
+        //center tick around current price
+        tickLower = historicMeanTick[0] - int24(uint24(L1TickNorm))/2;
+        tickHigher = historicMeanTick[0] + int24(uint24(L1TickNorm))/2;
+
+
+        //ensure multiple of 60 (given 3000 fee....)
+        //TODO: ensure right multiple given pool fee
+        tickLower = (tickLower / 60) * 60;
+        tickHigher = (tickHigher / 60) * 60;
     }
 
     function removeLiquidity(
