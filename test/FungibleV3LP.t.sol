@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/FungibleV3LP.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract FungibleV3LPTest is Test {
     FungibleV3LP public fungibleV3LP;
@@ -24,6 +25,15 @@ contract FungibleV3LPTest is Test {
         vm.selectFork(forkId);
         vm.rollFork(forkId, 15907000);
         fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
+
+        address testContract = address(this);
+        vm.startPrank(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
+        IERC20(weth).transfer(testContract, 10_000e18);
+        vm.stopPrank();
+
+        vm.prank(0x55FE002aefF02F77364de339a1292923A15844B8);
+        IERC20(usdc).transfer(testContract, 10_000_000e6);
+        vm.stopPrank();
     }
 
     function testNameAndSymbol() public {
