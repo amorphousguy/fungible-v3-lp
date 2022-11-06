@@ -112,22 +112,40 @@ contract FungibleV3LPTest is Test {
 
     }
 
-    // function testRemoveLiquidity() public {
-    //     // approve fungibleV3LP to spend test contract's LP tokens
-    //     fungibleV3LP.approve(address(fungibleV3LP), -1);
 
-    //     uint liquidity;
-    //     uint amountAMin;
-    //     uint amountBMin;
-    //     address to;
-    //     uint deadline;
+    function testRemoveLiquidity() public {
+        // approve fungibleV3LP to spend test contract's tokens
+        IERC20(weth).approve(address(fungibleV3LP), type(uint256).max);
+        IERC20(usdc).approve(address(fungibleV3LP), type(uint256).max);
 
-    //     fungibleV3LP.removeLiquidity(
-    //         liquidity,
-    //         amountAMin,
-    //         amountBMin,
-    //         to,
-    //         deadline
-    //     );
-    // }
+        uint amountADesired = 100e6;
+        uint amountBDesired = 100e18;
+        uint amountAMin=0;
+        uint amountBMin=0;
+        address to = address(this);
+        uint deadline = block.timestamp;
+        
+        fungibleV3LP.addLiquidity(
+            amountADesired,
+            amountBDesired,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
+
+        uint256 userLiquidity = fungibleV3LP.balanceOf(address(this));
+
+        fungibleV3LP.approve(address(fungibleV3LP),type(uint256).max);
+        fungibleV3LP.removeLiquidity(
+            userLiquidity,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
+
+        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
+        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
+    }
 }

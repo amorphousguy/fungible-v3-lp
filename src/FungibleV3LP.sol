@@ -193,7 +193,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         //update liquidity factor
         _liqFactor = _liqFactor * deposits[activeTokenId].liquidity / oldLiquidity;
 
-       //burn liquidity from msg.sender
+       //burn ERC20 from msg.sender
        _burn(msg.sender, liquidity);
 
         //decrease liquidity and send tokens to msg sender.  This will include latest collected fees proportional to the
