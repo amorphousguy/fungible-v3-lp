@@ -345,6 +345,42 @@ contract UniswapV3position is IERC721Receiver {
         }
     }
 
+ /// @notice A function that decreases the current liquidity by half. An example to show how to call the `decreaseLiquidity` function defined in periphery.
+    /// @param tokenId The id of the erc721 token
+    /// @return amount The amount received back in token0, token1
+    function decreaseLiquidityByFactor(uint256 tokenId, uint128 decreaseLiquidityAmount)
+        external
+        returns (AmountStruc memory amount)
+    {
+
+        // get liquidity data for tokenId
+        uint128 liquidity = deposits[tokenId].liquidity;
+        require(liquidity > decreaseLiquidityAmount,'not enough liquidity in Uniswap');
+
+        uint128 NewLiquidity = liquidity - decreaseLiquidityAmount;
+
+        // amount0Min and amount1Min are price slippage checks
+        // if the amount received after burning is not greater than these minimums, transaction will fail
+        INonfungiblePositionManager.DecreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .DecreaseLiquidityParams({
+                    tokenId: tokenId,
+                    liquidity: NewLiquidity,
+                    amount0Min: 0,
+                    amount1Min: 0,
+                    deadline: block.timestamp
+                });
+
+        (amount.amount0, amount.amount1) = nonfungiblePositionManager.decreaseLiquidity(
+            params
+        );
+
+
+        // send collected fees to owner
+        TransferHelper.safeTransfer(deposits[tokenId].token0, msg.sender, amount.amount0);
+        TransferHelper.safeTransfer(deposits[tokenId].token1, msg.sender, amount.amount1);
+    }
+
 
     /// @notice A function that decreases the current liquidity by half. An example to show how to call the `decreaseLiquidity` function defined in periphery.
     /// @param tokenId The id of the erc721 token
