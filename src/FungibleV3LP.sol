@@ -90,8 +90,8 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         delete amountBMin;
 
         //calculate using oracles right tickLower + tickHigher to use
-        int24 tickLower = TickMath.MIN_TICK;
-        int24 tickHigher = TickMath.MAX_TICK;
+        int24 tickLower = -60; //TickMath.MIN_TICK;
+        int24 tickHigher = 60; //TickMath.MAX_TICK;
 
         //burn current NFT fully
         //check if there is a current NFT position

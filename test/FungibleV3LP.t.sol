@@ -50,13 +50,20 @@ contract FungibleV3LPTest is Test {
 
         uint amountADesired = 100e6;
         uint amountBDesired = 100e18;
-        uint amountAMin;
-        uint amountBMin;
+        uint amountAMin=0;
+        uint amountBMin=0;
         address to = address(this);
         uint deadline = block.timestamp;
 
-        // assert(fungibleV3LP.balanceOf(address(this)) == 0);
-
+        require(amountADesired <= IERC20(usdc).balanceOf(address(this)),'not enough token A');
+        require(amountBDesired <= IERC20(weth).balanceOf(address(this)),'not enough token B');
+        console.log('balanceA: %s',IERC20(usdc).balanceOf(address(this)));
+        console.log('balanceB: %s',IERC20(weth).balanceOf(address(this)));
+        
+        assert(fungibleV3LP.balanceOf(address(this)) == 0);
+        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
+        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
+        
         fungibleV3LP.addLiquidity(
             amountADesired,
             amountBDesired,
@@ -66,7 +73,9 @@ contract FungibleV3LPTest is Test {
             deadline
         );
 
-        // assert(fungibleV3LP.balanceOf(address(this)) > 0);
+        assert(fungibleV3LP.balanceOf(address(this)) > 0);
+        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
+        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
     }
 
     // function testRemoveLiquidity() public {
