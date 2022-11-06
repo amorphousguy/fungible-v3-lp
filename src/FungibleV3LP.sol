@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "./UniswapV3position.sol";
 import "./WadRayMath.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
-import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
+import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
@@ -20,8 +20,8 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
     //current active NFT
     uint256 private activeTokenId;
 
-    //fee factor  
-    uint256 private _liqFactor;   //implements rebase token functionality [RaY]
+    //fee factor
+    uint256 private _liqFactor; //implements rebase token functionality [RaY]
 
     constructor(
         INonfungiblePositionManager _nonfungiblePositionManager,
@@ -34,19 +34,23 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
     {
         tokenA = _tokenA;
         tokenB = _tokenB;
-        if (tokenA>tokenB) (tokenA,tokenB) = (tokenB,tokenA); //swap order so tokenA is smallest (token0)
+        if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA); //swap order so tokenA is smallest (token0)
         fee = _fee;
-        _liqFactor = WadRayMath.ray();  //initialize with factor of 1
+        _liqFactor = WadRayMath.ray(); //initialize with factor of 1
     }
 
     function tName(address a, address b) private view returns (string memory) {
-        if (a>b) (a,b) = (b,a);  //make lowest address first (token0)
+        if (a > b) (a, b) = (b, a); //make lowest address first (token0)
         return
             string(
                 abi.encodePacked(
                     IERC20Metadata(a).name(),
+                    "-",
                     IERC20Metadata(b).name(),
-                    string("v3LP")
+                    "-",
+                    fee,
+                    "-",
+                    "v3LP"
                 )
             );
     }
@@ -56,13 +60,17 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         view
         returns (string memory)
     {
-        if (a>b) (a,b) = (b,a);  //make lowest address first (token0)
+        if (a > b) (a, b) = (b, a); //make lowest address first (token0)
         return
             string(
                 abi.encodePacked(
                     IERC20Metadata(a).symbol(),
+                    "-",
                     IERC20Metadata(b).symbol(),
-                    string("v3LP")
+                    "-",
+                    fee,
+                    "-",
+                    "v3LP"
                 )
             );
     }
@@ -100,19 +108,19 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
 
         //burn current NFT fully
         //check if there is a current NFT position
-        if (activeTokenId>0) {
+        if (activeTokenId > 0) {
             //collect all fees.  Accrue to token holders so far....
-            (AmountStruc memory amount) = collectAllFees(activeTokenId);  //brings all collected fees to this contract
+            AmountStruc memory amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
 
-            //withdraw liquidity from current collateral    
-            (AmountStruc memory amount2) = burnPosition(activeTokenId);  //brings all liquidity from position
+            //withdraw liquidity from current collateral
+            AmountStruc memory amount2 = burnPosition(activeTokenId); //brings all liquidity from position
 
             //update amounts to be minted in new position
-            //amountDesired.amount0 = 
-        } 
-        
+            //amountDesired.amount0 =
+        }
+
         //mint new position
-         AmountStruc memory returnAmount;
+        AmountStruc memory returnAmount;
         (activeTokenId, liquidity, returnAmount) = mintNewPosition(
             tokenA,
             tokenB,
@@ -124,7 +132,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         );
 
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
-        _mint(to, liquidity.rayDivFloor(_liqFactor)); 
+        _mint(to, liquidity.rayDivFloor(_liqFactor));
 
         return (returnAmount.amount0, returnAmount.amount1, liquidity);
     }
@@ -137,13 +145,12 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         uint deadline
     ) public returns (uint amountA, uint amountB) {
         //burn liquidity from msg.sender
-        _burn(msg.sender,liquidity);
+        _burn(msg.sender, liquidity);
 
         //collect fees
 
         //decrease liquidity by 'liquidity' amount - but keep NFT 'alive'
         //decrease liquidity on chain by liquidity.rayMulFloor(xx)   to get the real liquidity value on chain...
         //send tokens + fees to holder
-
     }
 }
