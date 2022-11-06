@@ -262,6 +262,7 @@ contract FungibleV3LPSwapsTest is Test {
         // The call to `exactInputSingle` executes the swap.
         swapRouter.exactInputSingle(params1);
         swapRouter.exactInputSingle(params2);
+        swapRouter.exactInputSingle(params3);
 
         // remove liquidity
         uint amountAMin=0;
