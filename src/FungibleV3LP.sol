@@ -180,13 +180,31 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         address to,
         uint deadline
     ) public returns (uint amountA, uint amountB) {
-        //burn liquidity from msg.sender
-        _burn(msg.sender, liquidity);
+        
+        uint256 oldLiquidity = deposits[activeTokenId].liquidity;
 
-        //collect fees
+        //collect all fees and reinvest + calculate new factor
+        AmountStruc memory amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
+        AmountStruc memory amountMin;    
+        amountMin.amount0 = 0;
+        amountMin.amount0 = 0;
+        //Add liquidity of new depositor
+        increaseLiquidityCurrentRange(
+                activeTokenId,
+                amount,
+                amountMin
+        );
+        //update liquidity factor
+        _liqFactor = _liqFactor * deposits[activeTokenId].liquidity / oldLiquidity;
 
-        //decrease liquidity by 'liquidity' amount - but keep NFT 'alive'
-        //decrease liquidity on chain by liquidity.rayMulFloor(xx)   to get the real liquidity value on chain...
-        //send tokens + fees to holder
+       //burn liquidity from msg.sender
+       _burn(msg.sender, liquidity);
+
+        //decrease liquidity and send tokens to msg sender.  This will include latest collected fees proportional to the
+        //amount that corresponds to them
+        AmountStruc memory amountReturned = decreaseLiquidity(activeTokenId, uint128(liquidity.rayMulFloor(_liqFactor)));
+      
+        amountA = amountReturned.amount0;
+        amountB = amountReturned.amount1;
     }
 }
