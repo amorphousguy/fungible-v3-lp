@@ -7,10 +7,12 @@ import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManag
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "hardhat/console.sol";
 
 contract FungibleV3LP is UniswapV3position, ERC20 {
     using WadRayMath for uint256;
+    using Strings for uint24;
 
     //pool variables
     address private tokenA;
@@ -30,7 +32,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         uint24 _fee
     )
         UniswapV3position(_nonfungiblePositionManager)
-        ERC20(tName(_tokenA, _tokenB), tSymbol(_tokenA, _tokenB))
+        ERC20(tSymbol(_tokenA, _tokenB, _fee), tSymbol(_tokenA, _tokenB, _fee))
     {
         tokenA = _tokenA;
         tokenB = _tokenB;
@@ -39,23 +41,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         _liqFactor = WadRayMath.ray(); //initialize with factor of 1
     }
 
-    function tName(address a, address b) private view returns (string memory) {
-        if (a > b) (a, b) = (b, a); //make lowest address first (token0)
-        return
-            string(
-                abi.encodePacked(
-                    IERC20Metadata(a).name(),
-                    "-",
-                    IERC20Metadata(b).name(),
-                    "-",
-                    fee,
-                    "-",
-                    "v3LP"
-                )
-            );
-    }
-
-    function tSymbol(address a, address b)
+    function tSymbol(address a, address b, uint24 _fee)
         private
         view
         returns (string memory)
@@ -68,7 +54,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
                     "-",
                     IERC20Metadata(b).symbol(),
                     "-",
-                    fee,
+                    _fee.toString(),
                     "-",
                     "v3LP"
                 )
