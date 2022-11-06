@@ -147,10 +147,11 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
                 amountDesired,
                 amountMin
             );
-
+            console.log("step6b");
             //update amounts to be minted in new position
             //amountDesired.amount0 = 
         } else {
+            console.log("step1 new NFT");
             //mint new position for this user and send LP tokens
             (activeTokenId, liquidity, returnAmount) = mintNewPosition(
                 tokenA,

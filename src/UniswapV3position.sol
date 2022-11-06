@@ -158,6 +158,8 @@ contract UniswapV3position is IERC721Receiver {
         // Create a deposit
         _createDeposit(msg.sender, tokenId);
 
+        console.log("created internal deposit");
+
         // Remove allowance and refund in both assets.
         if (amount.amount0 < _amountToMint.amount0) {
             TransferHelper.safeApprove(
@@ -176,7 +178,7 @@ contract UniswapV3position is IERC721Receiver {
                 0
             );
             uint256 refund1 = _amountToMint.amount1 - amount.amount1;
-            TransferHelper.safeTransfer(_token0, msg.sender, refund1);
+            TransferHelper.safeTransfer(_token1, msg.sender, refund1);
         }
     }
 
@@ -285,6 +287,7 @@ contract UniswapV3position is IERC721Receiver {
             AmountStruc memory amount
         )
     {
+        console.log("initial transfers");
         TransferHelper.safeTransferFrom(
             deposits[tokenId].token0,
             msg.sender,
@@ -308,6 +311,8 @@ contract UniswapV3position is IERC721Receiver {
             address(nonfungiblePositionManager),
             amountAdd.amount1
         );
+
+        console.log("increase liquidity");
 
         INonfungiblePositionManager.IncreaseLiquidityParams
             memory params = INonfungiblePositionManager
@@ -323,7 +328,9 @@ contract UniswapV3position is IERC721Receiver {
         (liquidity, amount.amount0, amount.amount1) = nonfungiblePositionManager
             .increaseLiquidity(params);
 
-              // Remove allowance and refund in both assets.
+
+        console.log("latter transfers");
+        // Remove allowance and refund in both assets.
         if (amount.amount0 < amountAdd.amount0) {
             TransferHelper.safeApprove(
                 deposits[tokenId].token0,
@@ -341,8 +348,9 @@ contract UniswapV3position is IERC721Receiver {
                 0
             );
             uint256 refund1 = amountAdd.amount1 - amount.amount1;
-            TransferHelper.safeTransfer(deposits[tokenId].token0, msg.sender, refund1);
+            TransferHelper.safeTransfer(deposits[tokenId].token1, msg.sender, refund1);
         }
+        console.log("finished latter transfers");
     }
 
 

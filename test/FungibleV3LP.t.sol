@@ -83,8 +83,8 @@ contract FungibleV3LPTest is Test {
         IERC20(weth).approve(address(fungibleV3LP), type(uint256).max);
         IERC20(usdc).approve(address(fungibleV3LP), type(uint256).max);
 
-        uint amountADesired = 50e6;
-        uint amountBDesired = 50e18;
+        uint amountADesired = 10e6;
+        uint amountBDesired = 10e18;
         uint amountAMin=0;
         uint amountBMin=0;
         address to = address(this);
