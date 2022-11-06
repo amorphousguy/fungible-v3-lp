@@ -180,18 +180,22 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         uint256 oldLiquidity = deposits[activeTokenId].liquidity;
 
         //collect all fees and reinvest + calculate new factor
+        //this also helps clear all collected fees for when we withdraw liquidity for msg.sender
         AmountStruc memory amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
         AmountStruc memory amountMin;    
         amountMin.amount0 = 0;
         amountMin.amount0 = 0;
         //Add liquidity of new depositor
-        increaseLiquidityCurrentRange(
-                activeTokenId,
-                amount,
-                amountMin
-        );
-        //update liquidity factor
-        _liqFactor = _liqFactor * deposits[activeTokenId].liquidity / oldLiquidity;
+        if (amount.amount0 > 0 || amount.amount1 > 0) {
+            increaseLiquidityCurrentRange(
+                    activeTokenId,
+                    amount,
+                    amountMin
+            );
+
+            //update liquidity factor
+            _liqFactor = _liqFactor * deposits[activeTokenId].liquidity / oldLiquidity;
+        }
 
        //burn ERC20 from msg.sender
        _burn(msg.sender, liquidity);
@@ -199,8 +203,13 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         //decrease liquidity and send tokens to msg sender.  This will include latest collected fees proportional to the
         //amount that corresponds to them
         AmountStruc memory amountReturned = decreaseLiquidity(activeTokenId, uint128(liquidity.rayMulFloor(_liqFactor)));
-      
-        amountA = amountReturned.amount0;
-        amountB = amountReturned.amount1;
+        amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
+
+        // send collected fees to owner
+        console.log('decrease liequidy before transfer');
+        TransferHelper.safeTransfer(deposits[activeTokenId].token0, msg.sender, amountReturned.amount0);
+        TransferHelper.safeTransfer(deposits[activeTokenId].token1, msg.sender, amountReturned.amount1);
+        console.log('decrease liequidy after transfer');
+
     }
 }

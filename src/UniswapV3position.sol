@@ -401,15 +401,13 @@ contract UniswapV3position is IERC721Receiver {
         uint128 liquidity = deposits[tokenId].liquidity;
         require(liquidity >= decreaseLiquidityAmount,'not enough liquidity in Uniswap');
 
-        uint128 NewLiquidity = liquidity - decreaseLiquidityAmount;
-
         // amount0Min and amount1Min are price slippage checks
         // if the amount received after burning is not greater than these minimums, transaction will fail
         INonfungiblePositionManager.DecreaseLiquidityParams
             memory params = INonfungiblePositionManager
                 .DecreaseLiquidityParams({
                     tokenId: tokenId,
-                    liquidity: NewLiquidity,
+                    liquidity: decreaseLiquidityAmount,
                     amount0Min: 0,
                     amount1Min: 0,
                     deadline: block.timestamp
@@ -418,11 +416,6 @@ contract UniswapV3position is IERC721Receiver {
         (amount.amount0, amount.amount1) = nonfungiblePositionManager.decreaseLiquidity(
             params
         );
-
-
-        // send collected fees to owner
-        TransferHelper.safeTransfer(deposits[tokenId].token0, msg.sender, amount.amount0);
-        TransferHelper.safeTransfer(deposits[tokenId].token1, msg.sender, amount.amount1);
     }
 
 
