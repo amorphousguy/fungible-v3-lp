@@ -97,12 +97,14 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         //check if there is a current NFT position
         if (activeTokenId>0) {
             uint256 oldLiquidity = deposits[activeTokenId].liquidity;
-
+            console.log("step1");
             //collect all fees.  Accrue to token holders so far....
             AmountStruc memory amount = collectAllFees(activeTokenId); //brings all collected fees to this contract
+            console.log("step2");
 
             //withdraw liquidity from current collateral
             AmountStruc memory amount2 = burnPosition(activeTokenId); //brings all liquidity from position
+            console.log("step3");
 
             //TODO calculate how liquidity how liquidity factor has changed given fees collected. for now hack this..
 
@@ -115,6 +117,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             amountDesiredExisting.amount0 = ERC20(tokenA).balanceOf(address(this));
             amountMinExisting.amount0 = 0;
             amountMinExisting.amount0 = 0;
+            console.log("step4");
 
             //mint new position for EXISTING tokens (ie, reposition liquidity)
             AmountStruc memory returnAmount;

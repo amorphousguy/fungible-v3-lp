@@ -439,14 +439,16 @@ contract UniswapV3position is IERC721Receiver {
             memory params = INonfungiblePositionManager
                 .DecreaseLiquidityParams({
                     tokenId: tokenId,
-                    liquidity: 0,
+                    liquidity: 1,   //leave 1 wei
                     amount0Min: 0,
                     amount1Min: 0,
                     deadline: block.timestamp
                 });
-
+        console.log('before burn');
         (amount.amount0, amount.amount1) = nonfungiblePositionManager.decreaseLiquidity(
             params
         );
+        console.log('after burn');
+
     }
 }
