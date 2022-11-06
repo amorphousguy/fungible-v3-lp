@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "./UniswapV3position.sol";
+import "./WadRayMath.sol";
 import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -9,13 +10,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 
 contract FungibleV3LP is UniswapV3position, ERC20 {
+    using WadRayMath for uint256;
+
     //pool variables
-    address tokenA;
-    address tokenB;
-    uint24 fee;
+    address private tokenA;
+    address private tokenB;
+    uint24 private fee;
 
     //current active NFT
-    uint256 activeTokenId;
+    uint256 private activeTokenId;
+
+    //fee factor  
+    uint256 private _liqFactor;   //implements rebase token functionality [RaY]
 
     constructor(
         INonfungiblePositionManager _nonfungiblePositionManager,
@@ -30,6 +36,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         tokenB = _tokenB;
         if (tokenA>tokenB) (tokenA,tokenB) = (tokenB,tokenA); //swap order so tokenA is smallest (token0)
         fee = _fee;
+        _liqFactor = WadRayMath.ray();  //initialize with factor of 1
     }
 
     function tName(address a, address b) private view returns (string memory) {
@@ -92,12 +99,16 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         int24 tickHigher = TickMath.MAX_TICK;
 
         //burn current NFT fully
-        //check if there is a current
+        //check if there is a current NFT position
         if (activeTokenId>0) {
+            //collect all fees.  Accrue to token holders so far....
             (AmountStruc memory amount) = collectAllFees(activeTokenId);  //brings all collected fees to this contract
 
             //withdraw liquidity from current collateral    
             (AmountStruc memory amount2) = burnPosition(activeTokenId);  //brings all liquidity from position
+
+            //update amounts to be minted in new position
+            //amountDesired.amount0 = 
         } 
         
         //mint new position
@@ -113,7 +124,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         );
 
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
-        _mint(to, liquidity); 
+        _mint(to, liquidity.rayDivFloor(_liqFactor)); 
 
         return (returnAmount.amount0, returnAmount.amount1, liquidity);
     }
@@ -129,7 +140,9 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         _burn(msg.sender,liquidity);
 
         //collect fees
+
         //decrease liquidity by 'liquidity' amount - but keep NFT 'alive'
+        //decrease liquidity on chain by liquidity.rayMulFloor(xx)   to get the real liquidity value on chain...
         //send tokens + fees to holder
 
     }
