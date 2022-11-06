@@ -235,34 +235,9 @@ contract FungibleV3LPSwapsTest is Test {
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
-        
-        ISwapRouter.ExactInputSingleParams memory params2 =
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: weth,
-                tokenOut: usdc,
-                fee: 3000,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        
-        ISwapRouter.ExactInputSingleParams memory params3 =
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: usdc,
-                tokenOut: weth,
-                fee: 3000,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
+    
         // The call to `exactInputSingle` executes the swap.
         swapRouter.exactInputSingle(params1);
-        swapRouter.exactInputSingle(params2);
-        swapRouter.exactInputSingle(params3);
 
         // remove liquidity
         uint amountAMin=0;
