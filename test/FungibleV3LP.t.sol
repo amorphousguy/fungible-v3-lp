@@ -16,6 +16,7 @@ contract FungibleV3LPTest is Test {
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
 
     function setUp() public {
+        // fork ETH mainnet locally
         string[] memory cmds = new string[](2);
         cmds[0] = "cat";
         cmds[1] = ".api";
@@ -26,6 +27,7 @@ contract FungibleV3LPTest is Test {
         vm.rollFork(forkId, 15907000);
         fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
 
+        // make test contract a whale
         address testContract = address(this);
         vm.startPrank(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
         IERC20(weth).transfer(testContract, 10_000e18);
