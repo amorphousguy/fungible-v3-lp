@@ -7,6 +7,7 @@ import "dependencies/v3-periphery/contracts/interfaces/INonfungiblePositionManag
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 
 contract FungibleV3LPTest is Test {
     FungibleV3LP public fungibleV3LP;
@@ -148,6 +149,123 @@ contract FungibleV3LPTest is Test {
             deadline
         );
 
+        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
+        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
+    }
+}
+
+contract FungibleV3LPSwapsTest is Test {
+    FungibleV3LP public fungibleV3LP;
+    ISwapRouter public swapRouter;
+
+    address private constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address private constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    INonfungiblePositionManager positionManager =
+        INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
+
+    function setUp() public {
+        // fork ETH mainnet locally
+        string[] memory cmds = new string[](2);
+        cmds[0] = "cat";
+        cmds[1] = ".api";
+        bytes memory result = vm.ffi(cmds);
+        string memory rpcURL = string(result);
+        uint256 forkId = vm.createFork(rpcURL);
+        vm.selectFork(forkId);
+        vm.rollFork(forkId, 15907000);
+        fungibleV3LP = new FungibleV3LP(positionManager, weth, usdc, 3000);
+
+        swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
+
+        // make test contract a whale
+        address testContract = address(this);
+        vm.startPrank(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
+        IERC20(weth).transfer(testContract, 10_000e18);
+        vm.stopPrank();
+
+        vm.prank(0x55FE002aefF02F77364de339a1292923A15844B8);
+        IERC20(usdc).transfer(testContract, 10_000_000e6);
+        vm.stopPrank();
+
+
+        // add liquidity
+        IERC20(weth).approve(address(fungibleV3LP), type(uint256).max);
+        IERC20(usdc).approve(address(fungibleV3LP), type(uint256).max);
+        uint amountADesired = 100e6;
+        uint amountBDesired = 100e18;
+        uint amountAMin=0;
+        uint amountBMin=0;
+        address to = address(this);
+        uint deadline = block.timestamp;
+        require(amountADesired <= IERC20(usdc).balanceOf(address(this)),'not enough token A');
+        require(amountBDesired <= IERC20(weth).balanceOf(address(this)),'not enough token B');
+        assert(fungibleV3LP.balanceOf(address(this)) == 0);
+        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
+        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
+        fungibleV3LP.addLiquidity(
+            amountADesired,
+            amountBDesired,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
+        assert(fungibleV3LP.balanceOf(address(this)) > 0);
+        assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
+        assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
+    }
+
+    function testSwaps(uint256 amountIn, uint24 d) public {
+        vm.assume(amountIn > 0 && amountIn <= 100e18);
+        bool forward = d % 2 == 0;
+
+        uint256 amountIn = IERC20(usdc).balanceOf(address(this));
+
+        // do some swaps
+        IERC20(weth).approve(address(swapRouter), type(uint256).max);
+        IERC20(usdc).approve(address(swapRouter), type(uint256).max);        
+
+        ISwapRouter.ExactInputSingleParams memory params =
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: usdc,
+                tokenOut: weth,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        if (!forward) {
+            params = ISwapRouter.ExactInputSingleParams({
+                tokenIn: weth,
+                tokenOut: usdc,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        }
+
+        // The call to `exactInputSingle` executes the swap.
+        swapRouter.exactInputSingle(params);
+
+        // remove liquidity
+        uint amountAMin=0;
+        uint amountBMin=0;
+        address to = address(this);
+        uint deadline = block.timestamp;
+        uint256 userLiquidity = fungibleV3LP.balanceOf(address(this));
+        fungibleV3LP.approve(address(fungibleV3LP),type(uint256).max);
+        fungibleV3LP.removeLiquidity(
+            userLiquidity,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
         assert(IERC20(usdc).balanceOf(address(fungibleV3LP))==0);
         assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
     }
