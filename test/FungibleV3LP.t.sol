@@ -212,10 +212,10 @@ contract FungibleV3LPSwapsTest is Test {
         assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
     }
 
-    function testSwaps(uint256 amountIn, uint8 n) public {
-        vm.assume(amountIn > 0 && amountIn <= IERC20(usdc).balanceOf(address(this)));
-        vm.assume(n > 0 && n <= 5);
-        
+    function testSwaps(uint256 amountIn, uint24 d) public {
+        vm.assume(amountIn > 0 && amountIn <= 100e18);
+        bool forward = d % 2 == 0;
+
         uint256 amountIn = IERC20(usdc).balanceOf(address(this));
 
         // do some swaps
@@ -233,9 +233,21 @@ contract FungibleV3LPSwapsTest is Test {
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
+        if (!forward) {
+            params = ISwapRouter.ExactInputSingleParams({
+                tokenIn: weth,
+                tokenOut: usdc,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        }
 
         // The call to `exactInputSingle` executes the swap.
-        uint256 amountOut = swapRouter.exactInputSingle(params);
+        swapRouter.exactInputSingle(params);
 
         // remove liquidity
         uint amountAMin=0;
