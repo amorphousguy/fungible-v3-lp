@@ -78,6 +78,40 @@ contract FungibleV3LPTest is Test {
         assert(IERC20(weth).balanceOf(address(fungibleV3LP))==0);
     }
 
+    function testAddLiquidityTwoTimes() public {
+        // approve fungibleV3LP to spend test contract's tokens
+        IERC20(weth).approve(address(fungibleV3LP), type(uint256).max);
+        IERC20(usdc).approve(address(fungibleV3LP), type(uint256).max);
+
+        uint amountADesired = 50e6;
+        uint amountBDesired = 50e18;
+        uint amountAMin=0;
+        uint amountBMin=0;
+        address to = address(this);
+        uint deadline = block.timestamp;
+
+        fungibleV3LP.addLiquidity(
+            amountADesired,
+            amountBDesired,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
+
+        //second time should be slightly different pathway...
+        fungibleV3LP.addLiquidity(
+            amountADesired,
+            amountBDesired,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
+
+
+    }
+
     // function testRemoveLiquidity() public {
     //     // approve fungibleV3LP to spend test contract's LP tokens
     //     fungibleV3LP.approve(address(fungibleV3LP), -1);
