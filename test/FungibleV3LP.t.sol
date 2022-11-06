@@ -193,8 +193,8 @@ contract FungibleV3LPSwapsTest is Test {
         // add liquidity
         IERC20(weth).approve(address(fungibleV3LP), type(uint256).max);
         IERC20(usdc).approve(address(fungibleV3LP), type(uint256).max);
-        uint amountADesired = 100_000e6;
-        uint amountBDesired = 10_000e18;
+        uint amountADesired = 10_000e6;
+        uint amountBDesired = 1_000e18;
         uint amountAMin=0;
         uint amountBMin=0;
         address to = address(this);
