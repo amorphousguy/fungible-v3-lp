@@ -180,6 +180,69 @@ contract UniswapV3position is IERC721Receiver {
         }
     }
 
+
+    /// @notice Calls the mint function defined in periphery, mints the same amount of each token.
+    /// For this example we are providing 1000 DAI and 1000 USDC in liquidity
+    /// @return tokenId The id of the newly minted ERC721
+    /// @return liquidity The amount of liquidity for the position
+    /// @return amount The amount of token0, token1
+    function mintNewPositionInternal(
+        address _token0,
+        address _token1,
+        uint24 _fee,
+        int24 _tickLower,
+        int24 _tickHigher,
+        AmountStruc memory _amountToMint,
+        AmountStruc memory _amountMin
+    )
+        internal
+        returns (
+            uint256 tokenId,
+            uint128 liquidity,
+            AmountStruc memory amount
+        )
+    {
+      
+        // Approve the position manager
+        if (_amountToMint.amount0 > 0)
+            TransferHelper.safeApprove(
+                _token0,
+                address(nonfungiblePositionManager),
+                _amountToMint.amount0
+            );
+        if (_amountToMint.amount1 > 0)
+            TransferHelper.safeApprove(
+                _token1,
+                address(nonfungiblePositionManager),
+                _amountToMint.amount1
+            );
+
+        INonfungiblePositionManager.MintParams
+            memory params = INonfungiblePositionManager.MintParams({
+                token0: _token0,
+                token1: _token1,
+                fee: _fee,
+                tickLower: _tickLower,
+                tickUpper: _tickHigher,
+                amount0Desired: _amountToMint.amount0,
+                amount1Desired: _amountToMint.amount1,
+                amount0Min: _amountMin.amount0,
+                amount1Min: _amountMin.amount1,
+                recipient: address(this),
+                deadline: block.timestamp
+            });
+
+        // Note that the pool must already exist.  Call createPool beforehand just in case
+        (tokenId, liquidity, amount.amount0, amount.amount1) = nonfungiblePositionManager
+            .mint(params);
+
+   
+        // Create a deposit
+        _createDeposit(msg.sender, tokenId);
+
+    }
+
+
     /// @notice Collects the fees associated with provided liquidity
     /// @dev The contract must hold the erc721 token before it can collect fees
     /// @param tokenId The id of the erc721 token

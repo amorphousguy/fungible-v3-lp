@@ -85,6 +85,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         //consolidate to avoid stack problems
         AmountStruc memory amountDesired;
         AmountStruc memory amountMin;
+        AmountStruc memory returnAmount;
         amountDesired.amount0 = amountADesired;
         amountDesired.amount1 = amountBDesired;
         amountMin.amount0 = amountAMin;
@@ -101,28 +102,61 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         //burn current NFT fully
         //check if there is a current NFT position
         if (activeTokenId>0) {
+            uint256 oldLiquidity = deposits[activeTokenId].liquidity;
+
             //collect all fees.  Accrue to token holders so far....
             (AmountStruc memory amount) = collectAllFees(activeTokenId);  //brings all collected fees to this contract
 
             //withdraw liquidity from current collateral    
             (AmountStruc memory amount2) = burnPosition(activeTokenId);  //brings all liquidity from position
 
+            //TODO calculate how liquidity how liquidity factor has changed given fees collected. for now hack this..
+
+            //derive amount backing existing LPs as what was just transferred to this contract + any previous leftovers
+            //derive amount backing existing LPs as what was just transferred to this contract + any previous leftovers
+            AmountStruc memory amountDesiredExisting;
+            AmountStruc memory amountMinExisting;
+            
+            amountDesiredExisting.amount0 = ERC20(tokenA).balanceOf(address(this));
+            amountDesiredExisting.amount0 = ERC20(tokenA).balanceOf(address(this));
+            amountMinExisting.amount0 = 0;
+            amountMinExisting.amount0 = 0;
+
+            //mint new position for EXISTING tokens (ie, reposition liquidity)
+            AmountStruc memory returnAmount;
+            (activeTokenId, liquidity, returnAmount) = mintNewPositionInternal(
+                tokenA,
+                tokenB,
+                fee,
+                tickLower,
+                tickHigher,
+                amountDesiredExisting,
+                amountMinExisting
+            );
+
+            //update liquidity factor
+            _liqFactor = _liqFactor * liquidity / oldLiquidity;
+
+            //Add liquidity of new depositor
+
+
             //update amounts to be minted in new position
             //amountDesired.amount0 = 
+        } else {
+            //mint new position for this user and send LP tokens
+            (activeTokenId, liquidity, returnAmount) = mintNewPosition(
+                tokenA,
+                tokenB,
+                fee,
+                tickLower,
+                tickHigher,
+                amountDesired,
+                amountMin
+            );
+
+
         } 
         
-        //mint new position
-         AmountStruc memory returnAmount;
-        (activeTokenId, liquidity, returnAmount) = mintNewPosition(
-            tokenA,
-            tokenB,
-            fee,
-            tickLower,
-            tickHigher,
-            amountDesired,
-            amountMin
-        );
-
         //mint ERC20 LP token with 'liquidity' amount in 'to' address wallet
         _mint(to, liquidity.rayDivFloor(_liqFactor)); 
 
