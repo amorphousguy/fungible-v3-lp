@@ -119,8 +119,6 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             
             console.log("step3");
 
-            //TODO calculate how liquidity how liquidity factor has changed given fees collected. for now hack this..
-
             //derive amount backing existing LPs as what was just transferred to this contract + any previous leftovers
             //derive amount backing existing LPs as what was just transferred to this contract + any previous leftovers
             AmountStruc memory amountDesiredExisting;
