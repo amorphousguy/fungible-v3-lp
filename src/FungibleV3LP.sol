@@ -239,7 +239,7 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
         amountMin.amount0 = 0;
         amountMin.amount0 = 0;
         //Add liquidity of new depositor
-        if (amount.amount0 > 0 || amount.amount1 > 0) {
+        if (amount.amount0 > 0 && amount.amount1 > 0) {
             increaseLiquidityCurrentRange(
                     activeTokenId,
                     amount,
