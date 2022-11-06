@@ -118,7 +118,8 @@ contract FungibleV3LP is UniswapV3position, ERC20 {
             
             amountDesiredExisting.amount0 = ERC20(tokenA).balanceOf(address(this));
             amountDesiredExisting.amount1 = ERC20(tokenB).balanceOf(address(this));
-            console.log(amountDesiredExisting.amount0);
+            console.log('tokenA balance: %s',amountDesiredExisting.amount0);
+            console.log('tokenB balance: %s',amountDesiredExisting.amount1);
             amountMinExisting.amount0 = 0;
             amountMinExisting.amount1 = 0;
             console.log("step4");
